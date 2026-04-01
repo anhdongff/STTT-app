@@ -8,6 +8,7 @@ export default function VerifyAccount() {
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ export default function VerifyAccount() {
       toast.error('Vui lòng nhập email');
       return;
     }
+    setSendingCode(true);
     try {
       await apiCall('/send-verify-code', {
         method: 'POST',
@@ -33,6 +35,8 @@ export default function VerifyAccount() {
       setCountdown(60);
     } catch (err: any) {
       toast.error(err?.meta?.message || 'Gửi mã thất bại');
+    } finally {
+      setSendingCode(false);
     }
   };
 
@@ -74,10 +78,10 @@ export default function VerifyAccount() {
               <button
                 type="button"
                 onClick={handleSendCode}
-                disabled={countdown > 0 || !email}
+                disabled={countdown > 0 || !email || sendingCode}
                 className="whitespace-nowrap rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
-                {countdown > 0 ? `Gửi lại (${countdown}s)` : 'Gửi mã'}
+                {sendingCode ? 'Đang gửi...' : countdown > 0 ? `Gửi lại (${countdown}s)` : 'Gửi mã'}
               </button>
             </div>
           </div>
