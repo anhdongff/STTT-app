@@ -20,7 +20,7 @@ Mỗi khi bạn thay đổi mã nguồn React, bạn cần thực hiện các b�
 
 1. **Build ứng dụng web:**
    ```bash
-   npm run build
+   INLINE_RUNTIME_CHUNK=false GENERATE_SOURCEMAP=false npm run build
    ```
 
 2. **Đồng bộ với thư mục Android:**
