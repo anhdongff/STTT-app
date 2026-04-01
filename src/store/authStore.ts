@@ -17,21 +17,21 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ token, user });
   },
   logout: async () => {
-    try {
-      // Import apiCall dynamically to avoid circular dependency if any, or just use fetch
-      const token = localStorage.getItem('token');
-      if (token) {
-        const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8111';
-        await fetch(`${BASE_URL}/logout`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      }
-    } catch (e) {
-      console.error('Logout error', e);
-    }
+    // try {
+    //   // Import apiCall dynamically to avoid circular dependency if any, or just use fetch
+    //   const token = localStorage.getItem('token');
+    //   if (token) {
+    //     const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8111';
+    //     await fetch(`${BASE_URL}/logout`, {
+    //       method: 'POST',
+    //       headers: {
+    //         'Authorization': `Bearer ${token}`
+    //       }
+    //     });
+    //   }
+    // } catch (e) {
+    //   console.error('Logout error', e);
+    // }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     set({ token: null, user: null });
