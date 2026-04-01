@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://0.0.0.0:8111';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8111';
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
