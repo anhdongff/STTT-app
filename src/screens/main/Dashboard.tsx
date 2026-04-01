@@ -326,7 +326,7 @@ export default function Dashboard() {
     return (
       <div className={cn(
         "flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800",
-        expandedBox === type ? "absolute inset-0 z-20 m-4" : "flex-1"
+        expandedBox === type ? "absolute inset-0 z-20" : "flex-1 min-h-0"
       )}>
         <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2 dark:border-gray-700">
           <h3 className="font-semibold text-gray-700 dark:text-gray-300">{title}</h3>
@@ -383,81 +383,105 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-full flex-col p-4 md:p-6 lg:flex-row lg:space-x-6">
-      {/* Left/Top: Player & Controls */}
-      <div className="flex flex-col space-y-4 lg:w-1/3">
-        {/* Player */}
-        <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
-          {fileUrl ? (
-            file?.type?.startsWith('video/') || fileUrl.match(/\.(mp4|webm|mov)$/i) ? (
-              <video
-                ref={playerRef as any}
-                src={fileUrl}
-                controls
-                className={cn("h-full w-full object-contain", isBusy && "pointer-events-none opacity-50")}
-                crossOrigin="anonymous"
-                key={`${transcribeVttUrl}-${translateVttUrl}`} // Force re-render when subtitles change
-              >
-                {transcribeVttUrl && (
-                  <track
-                    kind="subtitles"
-                    src={transcribeVttUrl}
-                    srcLang={languageCodes[inputLang as keyof typeof languageCodes]?.whisper || 'vi'}
-                    label="Bản chép lời"
-                    default
-                  />
-                )}
-                {translateVttUrl && (
-                  <track
-                    kind="subtitles"
-                    src={translateVttUrl}
-                    srcLang={languageCodes[outputLang as keyof typeof languageCodes]?.whisper || 'en'}
-                    label="Bản dịch"
-                  />
-                )}
-              </video>
-            ) : (
-              <div className="flex h-full items-center justify-center bg-gray-900">
-                <audio
+    <div className="flex h-full flex-col p-4 md:p-6 space-y-4 overflow-hidden">
+      {/* Top/Main Content Area */}
+      <div className="flex flex-1 flex-col lg:flex-row lg:space-x-6 min-h-0 space-y-4 lg:space-y-0">
+        
+        {/* Left/Top: Player */}
+        <div className="flex flex-col lg:w-1/2 shrink-0 lg:shrink">
+          <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
+            {fileUrl ? (
+              file?.type?.startsWith('video/') || fileUrl.match(/\.(mp4|webm|mov)$/i) ? (
+                <video
                   ref={playerRef as any}
                   src={fileUrl}
                   controls
-                  className={cn("w-full px-4", isBusy && "pointer-events-none opacity-50")}
-                />
+                  className={cn("h-full w-full object-contain", isBusy && "pointer-events-none opacity-50")}
+                  crossOrigin="anonymous"
+                  key={`${transcribeVttUrl}-${translateVttUrl}`} // Force re-render when subtitles change
+                >
+                  {transcribeVttUrl && (
+                    <track
+                      kind="subtitles"
+                      src={transcribeVttUrl}
+                      srcLang={languageCodes[inputLang as keyof typeof languageCodes]?.whisper || 'vi'}
+                      label="Bản chép lời"
+                      default
+                    />
+                  )}
+                  {translateVttUrl && (
+                    <track
+                      kind="subtitles"
+                      src={translateVttUrl}
+                      srcLang={languageCodes[outputLang as keyof typeof languageCodes]?.whisper || 'en'}
+                      label="Bản dịch"
+                    />
+                  )}
+                </video>
+              ) : (
+                <div className="flex h-full items-center justify-center bg-gray-900">
+                  <audio
+                    ref={playerRef as any}
+                    src={fileUrl}
+                    controls
+                    className={cn("w-full px-4", isBusy && "pointer-events-none opacity-50")}
+                  />
+                </div>
+              )
+            ) : (
+              <div className="flex h-full items-center justify-center text-gray-500">
+                Chưa chọn file
               </div>
-            )
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-500">
-              Chưa chọn file
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className="rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
-          <div className="space-y-4">
-            {/* Mode Selection */}
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Chế độ</label>
+        {/* Right/Middle: Previews */}
+        <div className="flex flex-1 flex-col space-y-4 lg:w-1/2 min-h-0 relative">
+          {renderPreviewBox('Bản chép lời', transcribeContent, 'transcribe')}
+          {mode === 'translate' && renderPreviewBox('Bản dịch', translateContent, 'translate')}
+        </div>
+      </div>
+
+      {/* Bottom: Controls */}
+      <div className="shrink-0 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:space-x-4 space-y-4 lg:space-y-0">
+          {/* Mode Selection */}
+          <div className="lg:w-48 shrink-0">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Chế độ</label>
+            <select
+              disabled={isBusy}
+              value={mode}
+              onChange={(e) => setMode(e.target.value as Mode)}
+              className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="transcribe">Chép lời</option>
+              <option value="translate">Chép lời và dịch</option>
+            </select>
+          </div>
+
+          {/* Language Selection */}
+          <div className="flex flex-1 space-x-2">
+            <div className="flex-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
               <select
                 disabled={isBusy}
-                value={mode}
-                onChange={(e) => setMode(e.target.value as Mode)}
+                value={inputLang}
+                onChange={(e) => setInputLang(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
-                <option value="transcribe">Chép lời</option>
-                <option value="translate">Chép lời và dịch</option>
+                {Object.entries(languageCodes).map(([key, lang]) => (
+                  <option key={key} value={key}>{lang.name}</option>
+                ))}
               </select>
             </div>
-
-            {/* Language Selection */}
-            <div className="flex space-x-2">
+            {mode === 'translate' && (
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
                 <select
                   disabled={isBusy}
-                  value={inputLang}
-                  onChange={(e) => setInputLang(e.target.value)}
+                  value={outputLang}
+                  onChange={(e) => setOutputLang(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 >
                   {Object.entries(languageCodes).map(([key, lang]) => (
@@ -465,61 +489,47 @@ export default function Dashboard() {
                   ))}
                 </select>
               </div>
-              {mode === 'translate' && (
-                <div className="flex-1">
-                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
-                  <select
-                    disabled={isBusy}
-                    value={outputLang}
-                    onChange={(e) => setOutputLang(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    {Object.entries(languageCodes)
-                      .map(([key, lang]) => (
-                      <option key={key} value={key}>{lang.name}</option>
-                    ))}
-                  </select>
-                </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex shrink-0 space-x-2">
+            <button
+              disabled={isBusy}
+              onClick={isRecording ? stopRecording : startRecording}
+              className={cn(
+                "flex flex-1 lg:flex-none items-center justify-center rounded-lg px-4 py-2 font-medium text-white transition-colors",
+                isRecording ? "bg-red-500 hover:bg-red-600" : "bg-gray-600 hover:bg-gray-700",
+                isBusy && "opacity-50"
               )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
+            >
+              {isRecording ? <Square className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
+              {isRecording ? 'Dừng thu' : 'Thu âm'}
+            </button>
+            
+            <label className={cn(
+              "flex flex-1 lg:flex-none cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
+              isBusy && "pointer-events-none opacity-50"
+            )}>
+              <FileAudio className="mr-2 h-4 w-4" />
+              Chọn file
+              <input
+                type="file"
+                accept="audio/*,video/*"
+                className="hidden"
+                onChange={handleFileChange}
                 disabled={isBusy}
-                onClick={isRecording ? stopRecording : startRecording}
-                className={cn(
-                  "flex flex-1 items-center justify-center rounded-lg px-4 py-2 font-medium text-white transition-colors",
-                  isRecording ? "bg-red-500 hover:bg-red-600" : "bg-gray-600 hover:bg-gray-700",
-                  isBusy && "opacity-50"
-                )}
-              >
-                {isRecording ? <Square className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
-                {isRecording ? 'Dừng thu' : 'Thu âm'}
-              </button>
-              
-              <label className={cn(
-                "flex flex-1 cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
-                isBusy && "pointer-events-none opacity-50"
-              )}>
-                <FileAudio className="mr-2 h-4 w-4" />
-                Chọn file
-                <input
-                  type="file"
-                  accept="audio/*,video/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  disabled={isBusy}
-                />
-              </label>
-            </div>
+              />
+            </label>
+          </div>
 
-            {/* Start/Stop Button */}
+          {/* Start/Stop Button */}
+          <div className="shrink-0 lg:w-48">
             <button
               onClick={isBusy ? handleStop : handleStart}
               disabled={status === 'processing' || (!file && !!selectedJobId)}
               className={cn(
-                "mt-4 flex w-full items-center justify-center rounded-lg px-4 py-3 font-bold text-white transition-colors",
+                "flex w-full items-center justify-center rounded-lg px-4 py-2 font-bold text-white transition-colors",
                 isBusy ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700",
                 (status === 'processing' || (!file && !!selectedJobId)) && "opacity-50 cursor-not-allowed"
               )}
@@ -532,18 +542,12 @@ export default function Dashboard() {
               ) : (
                 <>
                   <Play className="mr-2 h-5 w-5" />
-                  {(!file && !!selectedJobId) ? 'Đã hoàn thành' : 'Bắt đầu dịch'}
+                  {(!file && !!selectedJobId) ? 'Hoàn thành' : 'Bắt đầu dịch'}
                 </>
               )}
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Right/Bottom: Previews */}
-      <div className="mt-4 flex flex-1 flex-col space-y-4 lg:mt-0 relative">
-        {renderPreviewBox('Bản chép lời', transcribeContent, 'transcribe')}
-        {mode === 'translate' && renderPreviewBox('Bản dịch', translateContent, 'translate')}
       </div>
     </div>
   );
