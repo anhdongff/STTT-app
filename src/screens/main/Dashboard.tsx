@@ -53,6 +53,99 @@ function srtToVtt(srt: string): string {
   return vtt;
 }
 
+function PreviewBox({
+  title,
+  content,
+  type,
+  expandedBox,
+  setExpandedBox,
+  currentTime,
+  isBusy
+}: {
+  title: string;
+  content: string;
+  type: 'transcribe' | 'translate';
+  expandedBox: 'transcribe' | 'translate' | null;
+  setExpandedBox: (box: 'transcribe' | 'translate' | null) => void;
+  currentTime: number;
+  isBusy: boolean;
+}) {
+  const subtitles = parseSrt(content);
+  const activeIndex = subtitles.findIndex(sub => currentTime >= sub.start && currentTime <= sub.end);
+  const lastScrolledIndex = useRef<number>(-1);
+
+  useEffect(() => {
+    if (activeIndex !== -1 && activeIndex !== lastScrolledIndex.current && expandedBox !== type) {
+      lastScrolledIndex.current = activeIndex;
+      const el = document.getElementById(`subtitle-${type}-${activeIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeIndex, type, expandedBox]);
+
+  if (expandedBox && expandedBox !== type) return null;
+
+  return (
+    <div className={cn(
+      "flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800",
+      expandedBox === type ? "absolute inset-0 z-20" : "flex-1 min-h-0"
+    )}>
+      <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2 dark:border-gray-700">
+        <h3 className="font-semibold text-gray-700 dark:text-gray-300">{title}</h3>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(content);
+              toast.success('Đã sao chép');
+            }}
+            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setExpandedBox(expandedBox === type ? null : type)}
+            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4">
+        {subtitles.length > 0 ? (
+          <div className="whitespace-pre-wrap text-sm">
+            {expandedBox === type ? (
+              // Expanded view: show raw SRT
+              <pre className="font-mono text-gray-800 dark:text-gray-200">{content}</pre>
+            ) : (
+              // Normal view: show text only, highlight active
+              subtitles.map((sub, i) => {
+                const isActive = i === activeIndex;
+                return (
+                  <p 
+                    key={i} 
+                    id={`subtitle-${type}-${i}`}
+                    className={cn(
+                      "mb-2 transition-colors duration-200",
+                      isActive ? "text-blue-600 font-medium dark:text-blue-400" : "text-gray-800 dark:text-gray-200"
+                    )}
+                  >
+                    {sub.text}
+                  </p>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center text-gray-400">
+            {isBusy ? <span className="animate-pulse">Đang xử lý...</span> : 'Chưa có dữ liệu'}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { token } = useAuthStore();
   const { selectedJobId, setSelectedJobId } = useAppStore();
@@ -115,18 +208,8 @@ export default function Dashboard() {
     }
   }, [selectedJobId]);
 
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(player.currentTime * 1000);
-    };
-
-    player.addEventListener('timeupdate', handleTimeUpdate);
-    return () => player.removeEventListener('timeupdate', handleTimeUpdate);
-  }, [fileUrl]);
-
+  // The useEffect for timeupdate was removed because we use onTimeUpdate directly on media elements
+  
   const fetchJobDetails = async (id: number) => {
     try {
       const res = await apiCall(`/get-job/${id}`);
@@ -318,70 +401,6 @@ export default function Dashboard() {
 
   const isBusy = status === 'processing' || status === 'running';
 
-  const renderPreviewBox = (title: string, content: string, type: 'transcribe' | 'translate') => {
-    if (expandedBox && expandedBox !== type) return null;
-
-    const subtitles = parseSrt(content);
-
-    return (
-      <div className={cn(
-        "flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800",
-        expandedBox === type ? "absolute inset-0 z-20" : "flex-1 min-h-0"
-      )}>
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-2 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-700 dark:text-gray-300">{title}</h3>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(content);
-                toast.success('Đã sao chép');
-              }}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setExpandedBox(expandedBox === type ? null : type)}
-              className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-            >
-              <Maximize2 className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          {subtitles.length > 0 ? (
-            <div className="whitespace-pre-wrap text-sm">
-              {expandedBox === type ? (
-                // Expanded view: show raw SRT
-                <pre className="font-mono text-gray-800 dark:text-gray-200">{content}</pre>
-              ) : (
-                // Normal view: show text only, highlight active
-                subtitles.map((sub, i) => {
-                  const isActive = currentTime >= sub.start && currentTime <= sub.end;
-                  return (
-                    <p 
-                      key={i} 
-                      className={cn(
-                        "mb-2 transition-colors duration-200",
-                        isActive ? "text-blue-600 font-medium dark:text-blue-400" : "text-gray-800 dark:text-gray-200"
-                      )}
-                    >
-                      {sub.text}
-                    </p>
-                  );
-                })
-              )}
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center text-gray-400">
-              {isBusy ? <span className="animate-pulse">Đang xử lý...</span> : 'Chưa có dữ liệu'}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="flex h-full flex-col p-4 md:p-6 space-y-4 overflow-hidden">
       {/* Top/Main Content Area */}
@@ -396,6 +415,7 @@ export default function Dashboard() {
                   ref={playerRef as any}
                   src={fileUrl}
                   controls
+                  onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime * 1000)}
                   className={cn("h-full w-full object-contain", isBusy && "pointer-events-none opacity-50")}
                   crossOrigin="anonymous"
                   key={`${transcribeVttUrl}-${translateVttUrl}`} // Force re-render when subtitles change
@@ -424,6 +444,7 @@ export default function Dashboard() {
                     ref={playerRef as any}
                     src={fileUrl}
                     controls
+                    onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime * 1000)}
                     className={cn("w-full px-4", isBusy && "pointer-events-none opacity-50")}
                   />
                 </div>
@@ -438,8 +459,26 @@ export default function Dashboard() {
 
         {/* Right/Middle: Previews */}
         <div className="flex flex-1 flex-col space-y-4 lg:w-1/2 min-h-0 relative">
-          {renderPreviewBox('Bản chép lời', transcribeContent, 'transcribe')}
-          {mode === 'translate' && renderPreviewBox('Bản dịch', translateContent, 'translate')}
+          <PreviewBox
+            title="Bản chép lời"
+            content={transcribeContent}
+            type="transcribe"
+            expandedBox={expandedBox}
+            setExpandedBox={setExpandedBox}
+            currentTime={currentTime}
+            isBusy={isBusy}
+          />
+          {mode === 'translate' && (
+            <PreviewBox
+              title="Bản dịch"
+              content={translateContent}
+              type="translate"
+              expandedBox={expandedBox}
+              setExpandedBox={setExpandedBox}
+              currentTime={currentTime}
+              isBusy={isBusy}
+            />
+          )}
         </div>
       </div>
 
