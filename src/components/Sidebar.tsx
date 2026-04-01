@@ -1,4 +1,4 @@
-import { LogOut, History, Settings, Moon, Sun, Monitor, Trash2 } from 'lucide-react';
+import { LogOut, History, Settings, Moon, Sun, Monitor, Trash2, PlusCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useAppStore } from '../store/appStore';
 import { cn } from '../lib/utils';
@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose, onSelectMenu, currentMenu }: SidebarProps) {
   const { user, logout } = useAuthStore();
-  const { theme, setTheme } = useAppStore();
+  const { theme, setTheme, setSelectedJobId } = useAppStore();
 
   const handleThemeChange = () => {
     if (theme === 'light') setTheme('dark');
@@ -56,6 +56,23 @@ export default function Sidebar({ isOpen, onClose, onSelectMenu, currentMenu }: 
           {/* Menu */}
           <div className="flex-1 overflow-y-auto py-4">
             <nav className="space-y-1 px-2">
+              <button
+                onClick={() => { 
+                  setSelectedJobId(null);
+                  onSelectMenu('home'); 
+                  onClose(); 
+                }}
+                className={cn(
+                  "flex w-full items-center rounded-lg px-2 py-3 text-sm font-medium transition-colors",
+                  currentMenu === 'home'
+                    ? "bg-blue-50 text-blue-700 dark:bg-blue-900/50 dark:text-blue-200"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                )}
+              >
+                <PlusCircle className="h-6 w-6 shrink-0" />
+                <span className="ml-3 md:hidden group-hover:md:block">Bản chép lời mới</span>
+              </button>
+
               <button
                 onClick={() => { onSelectMenu('history'); onClose(); }}
                 className={cn(

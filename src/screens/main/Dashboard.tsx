@@ -46,6 +46,13 @@ function parseSrt(srt: string): Subtitle[] {
   });
 }
 
+function srtToVtt(srt: string): string {
+  if (!srt) return '';
+  let vtt = 'WEBVTT\n\n';
+  vtt += srt.replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g, '$1.$2');
+  return vtt;
+}
+
 export default function Dashboard() {
   const { token } = useAuthStore();
   const { selectedJobId, setSelectedJobId } = useAppStore();
@@ -57,6 +64,8 @@ export default function Dashboard() {
   const [status, setStatus] = useState<Status>('idle');
   const [transcribeContent, setTranscribeContent] = useState('');
   const [translateContent, setTranslateContent] = useState('');
+  const [transcribeVttUrl, setTranscribeVttUrl] = useState<string | null>(null);
+  const [translateVttUrl, setTranslateVttUrl] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [expandedBox, setExpandedBox] = useState<'transcribe' | 'translate' | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
@@ -67,8 +76,42 @@ export default function Dashboard() {
   const playerRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    if (transcribeContent) {
+      const vtt = srtToVtt(transcribeContent);
+      const blob = new Blob([vtt], { type: 'text/vtt' });
+      const url = URL.createObjectURL(blob);
+      setTranscribeVttUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setTranscribeVttUrl(null);
+    }
+  }, [transcribeContent]);
+
+  useEffect(() => {
+    if (translateContent) {
+      const vtt = srtToVtt(translateContent);
+      const blob = new Blob([vtt], { type: 'text/vtt' });
+      const url = URL.createObjectURL(blob);
+      setTranslateVttUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setTranslateVttUrl(null);
+    }
+  }, [translateContent]);
+
+  useEffect(() => {
     if (selectedJobId) {
       fetchJobDetails(selectedJobId);
+    } else {
+      setFile(null);
+      setFileUrl(null);
+      setTranscribeContent('');
+      setTranslateContent('');
+      setStatus('idle');
+      setMode('transcribe');
+      setInputLang('VIE');
+      setOutputLang('ENG');
+      setCurrentTime(0);
     }
   }, [selectedJobId]);
 
@@ -352,7 +395,27 @@ export default function Dashboard() {
                 src={fileUrl}
                 controls
                 className={cn("h-full w-full object-contain", isBusy && "pointer-events-none opacity-50")}
-              />
+                crossOrigin="anonymous"
+                key={`${transcribeVttUrl}-${translateVttUrl}`} // Force re-render when subtitles change
+              >
+                {transcribeVttUrl && (
+                  <track
+                    kind="subtitles"
+                    src={transcribeVttUrl}
+                    srcLang={languageCodes[inputLang as keyof typeof languageCodes]?.whisper || 'vi'}
+                    label="Bản chép lời"
+                    default
+                  />
+                )}
+                {translateVttUrl && (
+                  <track
+                    kind="subtitles"
+                    src={translateVttUrl}
+                    srcLang={languageCodes[outputLang as keyof typeof languageCodes]?.whisper || 'en'}
+                    label="Bản dịch"
+                  />
+                )}
+              </video>
             ) : (
               <div className="flex h-full items-center justify-center bg-gray-900">
                 <audio
