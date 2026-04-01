@@ -217,10 +217,8 @@ export default function Dashboard() {
         const job = res.data;
         const metadata = typeof job.metadata === 'string' ? JSON.parse(job.metadata) : job.metadata;
         
-        const inLangKey = Object.entries(languageCodes).find(([_, l]) => l.whisper === job.input_language)?.[0] || 'VIE';
-        const outLangKey = job.output_language 
-          ? Object.entries(languageCodes).find(([_, l]) => l.nllb === job.output_language)?.[0] || 'ENG'
-          : 'ENG';
+        const inLangKey = job.input_language;
+        const outLangKey = job.output_language;
 
         setInputLang(inLangKey);
         setOutputLang(outLangKey);
