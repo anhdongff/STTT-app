@@ -1,0 +1,5 @@
+{
+  "name": "Speech to Text - Translate (STTT)",
+  "description": "Ứng dụng hỗ trợ chuyển đổi giọng nói thành văn bản và dịch thuật đa ngôn ngữ.",
+  "requestFramePermissions": ["camera", "microphone"]
+}
