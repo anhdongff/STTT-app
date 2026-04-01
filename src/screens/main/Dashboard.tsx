@@ -219,8 +219,8 @@ export default function Dashboard() {
         const payload = {
           file_path: filePath,
           output_type: 'srt',
-          input_language: languageCodes[inputLang as keyof typeof languageCodes]?.whisper || 'vi',
-          output_language: mode === 'translate' ? (languageCodes[outputLang as keyof typeof languageCodes]?.nllb || 'eng_Latn') : undefined,
+          input_language: inputLang,
+          output_language: mode === 'translate' ? outputLang : undefined,
           type: mode,
           metadata: {
             local_file_path: fileUrl,
@@ -412,7 +412,6 @@ export default function Dashboard() {
                     className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   >
                     {Object.entries(languageCodes)
-                      .filter(([_, lang]) => (lang as any).translate)
                       .map(([key, lang]) => (
                       <option key={key} value={key}>{lang.name}</option>
                     ))}
