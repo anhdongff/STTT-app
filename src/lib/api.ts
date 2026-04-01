@@ -32,7 +32,10 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   }
 
   if (data?.meta?.action) {
-    handleAction(data.meta.action, data.meta.message);
+    // Ignore 'OK' toast messages which might come from prefetch or default success responses
+    if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
+      handleAction(data.meta.action, data.meta.message);
+    }
   }
 
   if (!response.ok) {
