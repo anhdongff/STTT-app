@@ -1,6 +1,19 @@
 import { toast } from 'sonner';
+import { Capacitor } from '@capacitor/core';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8111';
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) return envUrl;
+
+  // On Android Emulator, localhost is 10.0.2.2
+  if (Capacitor.getPlatform() === 'android') {
+    return 'http://192.168.0.100:8111';
+  }
+
+  return 'http://localhost:8111';
+};
+
+const BASE_URL = getBaseUrl();
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
