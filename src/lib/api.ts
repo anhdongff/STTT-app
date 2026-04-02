@@ -38,36 +38,42 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     return data;
   };
 
-  // Use Native HTTP for Android/iOS to bypass CORS for JSON requests
-  // For FormData (file uploads), we fallback to standard fetch as it's more reliable
-  const isFormData = options.body instanceof FormData;
-  
-  if (Capacitor.isNativePlatform() && !isFormData) {
+  // Use Native HTTP for ALL requests on Android/iOS to bypass CORS
+  if (Capacitor.isNativePlatform()) {
     try {
+      const isFormData = options.body instanceof FormData;
+      
       const nativeOptions: any = {
         url,
         method: options.method || 'GET',
         headers: {
           ...headers,
-          'Content-Type': 'application/json',
         },
       };
 
-      if (options.body) {
-        // Only parse if it's a string, otherwise use as is
-        nativeOptions.data = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+      if (isFormData) {
+        // For FormData, let Capacitor handle the content-type and boundary
+        nativeOptions.data = options.body;
+      } else {
+        // For JSON requests
+        nativeOptions.headers['Content-Type'] = 'application/json';
+        if (options.body) {
+          // Only parse if it's a string, if it's already an object use it directly
+          nativeOptions.data = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
+        }
       }
 
+      console.log(`Native Request [${nativeOptions.method}]: ${url}`);
       const response: HttpResponse = await CapacitorHttp.request(nativeOptions);
       return processResponse(response.status, response.data);
     } catch (error) {
       console.error('Native API Call Error:', error);
-      // If native fails, try fallback to fetch
+      throw error; 
     }
   }
 
-  // Standard fetch logic (for Web or FormData)
-  if (!isFormData) {
+  // Standard fetch logic (ONLY for Web/Development browser)
+  if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
