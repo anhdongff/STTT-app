@@ -69,5 +69,20 @@ Trong Android Studio:
 2. Chọn thiết bị (máy ảo hoặc máy thật).
 3. Bấm nút **Run** (hình tam giác xanh).
 
+## 7. Cấp quyền Microphone (Quan trọng)
+
+Để ứng dụng có thể thu âm trên Android, bạn **BẮT BUỘC** phải thêm các quyền sau vào file `android/app/src/main/AndroidManifest.xml`:
+
+1. Mở file `AndroidManifest.xml`.
+2. Thêm các dòng sau vào bên trong thẻ `<manifest>` (thường ở ngay trên thẻ `<application>`):
+
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+<uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+```
+
+3. Nếu bạn dùng máy ảo (Emulator), hãy đảm bảo đã bật Microphone trong cài đặt của máy ảo.
+4. Trên điện thoại thật, sau khi cài đặt app, hãy vào **Cài đặt -> Ứng dụng -> STTT -> Quyền** và đảm bảo quyền **Microphone** đã được bật (hoặc app sẽ hỏi khi bạn bấm nút thu âm lần đầu).
+
 ---
 **Lưu ý:** Nếu bạn gặp lỗi về `Cleartext Traffic` (không cho phép gọi http), bạn cần cấu hình `networkSecurityConfig` trong AndroidManifest.xml hoặc sử dụng **https** cho backend.

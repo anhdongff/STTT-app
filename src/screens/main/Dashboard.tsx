@@ -280,8 +280,9 @@ export default function Dashboard() {
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) {
-      toast.error('Không thể truy cập microphone');
+    } catch (err: any) {
+      console.error('Microphone access error:', err);
+      toast.error(`Không thể truy cập microphone: ${err.message || 'Lỗi không xác định'}`);
     }
   };
 
