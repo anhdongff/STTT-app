@@ -1,25 +1,11 @@
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
 
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
-  if (envUrl) return envUrl;
-
-  const platform = Capacitor.getPlatform();
-  const isNative = Capacitor.isNativePlatform();
-  
-  console.log('Capacitor Platform:', platform);
-  console.log('Is Native Platform:', isNative);
-
-  // If we are on a native platform (Android/iOS), use the hardcoded IP
-  if (isNative || platform === 'android' || platform === 'ios') {
-    const androidIp = 'http://192.168.0.100:8111';
-    console.log('Using Android/Native BASE_URL:', androidIp);
-    return androidIp;
-  }
-
-  console.log('Using default BASE_URL: http://localhost:8111');
-  return 'http://localhost:8111';
+  if (!envUrl) {
+    console.log("no base url found")
+    return 'http://192.168.0.100:8111/'
+  } else return envUrl;
 };
 
 export const BASE_URL = getBaseUrl();
