@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import { Capacitor } from '@capacitor/core';
-import { apiCall, getWsUrl, BASE_URL } from '../../lib/api';
+import { apiCall, getWsUrl } from '../../lib/api';
 import { convertToPCM16 } from '../../lib/audioUtils';
 import languageCodes from '../../lib/language-code.json';
 import { useAuthStore } from '../../store/authStore';
@@ -483,11 +482,6 @@ export default function Dashboard() {
 
       {/* Bottom: Controls */}
       <div className="shrink-0 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
-        {Capacitor.isNativePlatform() && (
-          <div className="mb-2 text-[10px] text-gray-400 font-mono">
-            API: {BASE_URL} (Platform: {Capacitor.getPlatform()})
-          </div>
-        )}
         <div className="flex flex-col lg:flex-row lg:items-end lg:space-x-4 space-y-4 lg:space-y-0">
           {/* Mode Selection */}
           <div className="lg:w-48 shrink-0">
