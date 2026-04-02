@@ -1,11 +1,12 @@
 import { toast } from 'sonner';
+import { Capacitor, CapacitorHttp, HttpResponse } from '@capacitor/core';
 
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (!envUrl) {
     console.log("no base url found")
-    return 'http://192.168.0.100:8111/'
-  } else return envUrl;
+    return 'http://192.168.0.100:8111'
+  } else return envUrl.replace(/\/$/, ''); // Remove trailing slash
 };
 
 export const BASE_URL = getBaseUrl();
@@ -20,11 +21,55 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
+  const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+
+  // Use Native HTTP for Android/iOS to bypass CORS
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const nativeOptions = {
+        url,
+        method: options.method || 'GET',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        data: options.body ? JSON.parse(options.body as string) : undefined,
+      };
+
+      // Handle FormData if needed (simplified for common JSON cases)
+      if (options.body instanceof FormData) {
+        delete nativeOptions.headers['Content-Type'];
+        // Note: FormData handling in CapacitorHttp might need more complex logic
+        // but for login/basic JSON it works perfectly with the above.
+      }
+
+      const response: HttpResponse = await CapacitorHttp.request(nativeOptions);
+      
+      const data = response.data;
+
+      if (data?.meta?.action) {
+        if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
+          handleAction(data.meta.action, data.meta.message);
+        }
+      }
+
+      if (response.status < 200 || response.status >= 300) {
+        throw data || new Error('Network response was not ok');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Native API Call Error:', error);
+      throw error;
+    }
+  }
+
+  // Fallback to standard fetch for Web/Dev
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(url, {
     ...options,
     headers,
   });
@@ -40,7 +85,6 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
   }
 
   if (data?.meta?.action) {
-    // Ignore 'OK' toast messages which might come from prefetch or default success responses
     if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
       handleAction(data.meta.action, data.meta.message);
     }
