@@ -8,7 +8,12 @@ const config: CapacitorConfig = {
     androidScheme: 'http',
     cleartext: true,
     allowNavigation: ['192.168.0.100:8111']
-  }
+  },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true, // ĐÂY LÀ CHÌA KHÓA
+    },
+  },
 };
 
 export default config;

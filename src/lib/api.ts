@@ -1,5 +1,4 @@
 import { toast } from 'sonner';
-import { Capacitor, CapacitorHttp, HttpResponse } from '@capacitor/core';
 
 const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
@@ -37,40 +36,6 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 
     return data;
   };
-
-  // Use Native HTTP for ALL requests on Android/iOS to bypass CORS
-  if (Capacitor.isNativePlatform()) {
-    try {
-      const isFormData = options.body instanceof FormData;
-      
-      const nativeOptions: any = {
-        url,
-        method: options.method || 'GET',
-        headers: {
-          ...headers,
-        },
-      };
-
-      if (isFormData) {
-        // For FormData, let Capacitor handle the content-type and boundary
-        nativeOptions.data = options.body;
-      } else {
-        // For JSON requests
-        nativeOptions.headers['Content-Type'] = 'application/json';
-        if (options.body) {
-          // Only parse if it's a string, if it's already an object use it directly
-          nativeOptions.data = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
-        }
-      }
-
-      console.log(`Native Request [${nativeOptions.method}]: ${url}`);
-      const response: HttpResponse = await CapacitorHttp.request(nativeOptions);
-      return processResponse(response.status, response.data);
-    } catch (error) {
-      console.error('Native API Call Error:', error);
-      throw error; 
-    }
-  }
 
   // Standard fetch logic (ONLY for Web/Development browser)
   if (!(options.body instanceof FormData)) {
@@ -122,4 +87,22 @@ export function getWsUrl(endpoint: string) {
     host = url.host;
   }
   return `${wsProtocol}//${host}${endpoint}`;
+}
+
+// Helper: convert a Blob/File to base64 string (without data: prefix)
+async function fileToBase64(file: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const comma = result.indexOf(',');
+        resolve(comma >= 0 ? result.slice(comma + 1) : result);
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
