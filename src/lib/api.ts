@@ -23,49 +23,51 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
 
   const url = `${BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
 
-  // Use Native HTTP for Android/iOS to bypass CORS
-  if (Capacitor.isNativePlatform()) {
+  // Helper to handle response data and actions
+  const processResponse = (status: number, data: any) => {
+    if (data?.meta?.action) {
+      if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
+        handleAction(data.meta.action, data.meta.message);
+      }
+    }
+
+    if (status < 200 || status >= 300) {
+      throw data || new Error('Network response was not ok');
+    }
+
+    return data;
+  };
+
+  // Use Native HTTP for Android/iOS to bypass CORS for JSON requests
+  // For FormData (file uploads), we fallback to standard fetch as it's more reliable
+  const isFormData = options.body instanceof FormData;
+  
+  if (Capacitor.isNativePlatform() && !isFormData) {
     try {
-      const nativeOptions = {
+      const nativeOptions: any = {
         url,
         method: options.method || 'GET',
         headers: {
           ...headers,
           'Content-Type': 'application/json',
         },
-        data: options.body ? JSON.parse(options.body as string) : undefined,
       };
 
-      // Handle FormData if needed (simplified for common JSON cases)
-      if (options.body instanceof FormData) {
-        delete nativeOptions.headers['Content-Type'];
-        // Note: FormData handling in CapacitorHttp might need more complex logic
-        // but for login/basic JSON it works perfectly with the above.
+      if (options.body) {
+        // Only parse if it's a string, otherwise use as is
+        nativeOptions.data = typeof options.body === 'string' ? JSON.parse(options.body) : options.body;
       }
 
       const response: HttpResponse = await CapacitorHttp.request(nativeOptions);
-      
-      const data = response.data;
-
-      if (data?.meta?.action) {
-        if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
-          handleAction(data.meta.action, data.meta.message);
-        }
-      }
-
-      if (response.status < 200 || response.status >= 300) {
-        throw data || new Error('Network response was not ok');
-      }
-
-      return data;
+      return processResponse(response.status, response.data);
     } catch (error) {
       console.error('Native API Call Error:', error);
-      throw error;
+      // If native fails, try fallback to fetch
     }
   }
 
-  // Fallback to standard fetch for Web/Dev
-  if (!(options.body instanceof FormData)) {
+  // Standard fetch logic (for Web or FormData)
+  if (!isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -84,17 +86,7 @@ export async function apiCall(endpoint: string, options: RequestInit = {}) {
     return null;
   }
 
-  if (data?.meta?.action) {
-    if (!(data.meta.action === 'toast' && data.meta.message === 'OK')) {
-      handleAction(data.meta.action, data.meta.message);
-    }
-  }
-
-  if (!response.ok) {
-    throw data;
-  }
-
-  return data;
+  return processResponse(response.status, data);
 }
 
 function handleAction(action: string, message: string) {
