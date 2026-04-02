@@ -10,7 +10,7 @@ export default function MainLayout() {
   const [currentMenu, setCurrentMenu] = useState<'home' | 'history' | 'settings'>('home');
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-full overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Top Bar (Mobile) */}
       <div className="fixed top-0 z-30 flex h-16 w-full items-center justify-between bg-white px-4 shadow-sm dark:bg-gray-800 md:hidden">
         <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">STTT</h1>

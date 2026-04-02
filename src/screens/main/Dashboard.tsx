@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiCall, getWsUrl } from '../../lib/api';
@@ -401,12 +401,12 @@ export default function Dashboard() {
   const isBusy = status === 'processing' || status === 'running';
 
   return (
-    <div className="flex h-full flex-col p-4 md:p-6 space-y-4 overflow-hidden">
+    <div className="flex h-full flex-col p-4 md:p-6 space-y-4 overflow-y-auto md:overflow-hidden">
       {/* Top/Main Content Area */}
-      <div className="flex flex-1 flex-col lg:flex-row lg:space-x-6 min-h-0 space-y-4 lg:space-y-0">
+      <div className="flex flex-1 flex-col md:flex-row md:space-x-6 min-h-0 space-y-4 md:space-y-0">
         
         {/* Left/Top: Player */}
-        <div className="flex flex-col lg:w-1/2 shrink-0 lg:shrink">
+        <div className="flex flex-col md:w-1/2 shrink-0 md:shrink">
           <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
             {fileUrl ? (
               file?.type?.startsWith('video/') || fileUrl.match(/\.(mp4|webm|mov)$/i) ? (
@@ -457,7 +457,7 @@ export default function Dashboard() {
         </div>
 
         {/* Right/Middle: Previews */}
-        <div className="flex flex-1 flex-col space-y-4 lg:w-1/2 min-h-0 relative">
+        <div className="flex flex-1 flex-col space-y-4 md:w-1/2 min-h-0 relative">
           <PreviewBox
             title="Bản chép lời"
             content={transcribeContent}
@@ -483,9 +483,9 @@ export default function Dashboard() {
 
       {/* Bottom: Controls */}
       <div className="shrink-0 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:space-x-4 space-y-4 lg:space-y-0">
+        <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0">
           {/* Mode Selection */}
-          <div className="lg:w-48 shrink-0">
+          <div className="md:w-48 shrink-0">
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Chế độ</label>
             <select
               disabled={isBusy}
@@ -536,7 +536,7 @@ export default function Dashboard() {
               disabled={isBusy}
               onClick={isRecording ? stopRecording : startRecording}
               className={cn(
-                "flex flex-1 lg:flex-none items-center justify-center rounded-lg px-4 py-2 font-medium text-white transition-colors",
+                "flex flex-1 md:flex-none items-center justify-center rounded-lg px-4 py-2 font-medium text-white transition-colors",
                 isRecording ? "bg-red-500 hover:bg-red-600" : "bg-gray-600 hover:bg-gray-700",
                 isBusy && "opacity-50"
               )}
@@ -546,7 +546,7 @@ export default function Dashboard() {
             </button>
             
             <label className={cn(
-              "flex flex-1 lg:flex-none cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
+              "flex flex-1 md:flex-none cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
               isBusy && "pointer-events-none opacity-50"
             )}>
               <FileAudio className="mr-2 h-4 w-4" />
@@ -562,7 +562,7 @@ export default function Dashboard() {
           </div>
 
           {/* Start/Stop Button */}
-          <div className="shrink-0 lg:w-48">
+          <div className="shrink-0 md:w-48">
             <button
               onClick={isBusy ? handleStop : handleStart}
               disabled={status === 'processing' || (!file && !!selectedJobId)}
