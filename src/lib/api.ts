@@ -5,15 +5,24 @@ const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) return envUrl;
 
-  // On Android Emulator, localhost is 10.0.2.2
-  if (Capacitor.getPlatform() === 'android') {
-    return 'http://192.168.0.100:8111';
+  const platform = Capacitor.getPlatform();
+  const isNative = Capacitor.isNativePlatform();
+  
+  console.log('Capacitor Platform:', platform);
+  console.log('Is Native Platform:', isNative);
+
+  // If we are on a native platform (Android/iOS), use the hardcoded IP
+  if (isNative || platform === 'android' || platform === 'ios') {
+    const androidIp = 'http://192.168.0.100:8111';
+    console.log('Using Android/Native BASE_URL:', androidIp);
+    return androidIp;
   }
 
+  console.log('Using default BASE_URL: http://localhost:8111');
   return 'http://localhost:8111';
 };
 
-const BASE_URL = getBaseUrl();
+export const BASE_URL = getBaseUrl();
 
 export async function apiCall(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');

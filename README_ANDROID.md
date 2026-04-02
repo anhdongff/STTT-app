@@ -16,51 +16,47 @@ Các file quan trọng:
 
 ## 3. Quy trình xây dựng (Build)
 
-Mỗi khi bạn thay đổi mã nguồn React, bạn cần thực hiện các bước sau:
+Mỗi khi bạn thay đổi mã nguồn React (như sửa file `api.ts`), bạn **BẮT BUỘC** phải thực hiện các bước sau để cập nhật ứng dụng trên Android:
 
 1. **Build ứng dụng web:**
    ```bash
-   INLINE_RUNTIME_CHUNK=false GENERATE_SOURCEMAP=false npm run build
+   npm run build
    ```
 
-2. **Đồng bộ với thư mục Android:**
+2. **Đồng bộ mã nguồn mới vào thư mục Android:**
    ```bash
-   npx cap sync
+   npx cap sync android
    ```
 
-3. **Mở dự án trong Android Studio:**
-   ```bash
-   npx cap open android
-   ```
+3. **Chạy lại ứng dụng từ Android Studio:**
+   - Mở Android Studio.
+   - Bấm nút **Stop** (nếu đang chạy).
+   - Bấm nút **Run** (hình tam giác xanh) để cài đặt bản build mới nhất lên điện thoại.
+
+**Lưu ý:** Nếu bạn không chạy `npx cap sync`, ứng dụng trên điện thoại sẽ vẫn chạy phiên bản cũ và có thể vẫn gọi API tới `localhost:8111`.
 
 ## 4. Cấu hình API Port & Kết nối (Quan trọng)
 
-Mặc định, ứng dụng kết nối tới `http://localhost:8111`. Tuy nhiên, trên Android, `localhost` trỏ về chính thiết bị Android chứ không phải máy tính chạy backend của bạn.
+Mặc định, ứng dụng trên Android sẽ tự động nhận diện nếu đang chạy trong môi trường Native và sử dụng IP cứng trong `src/lib/api.ts`.
 
-### Cách A: Sử dụng máy ảo Android (Emulator)
-Nếu bạn chạy backend trên máy tính và dùng máy ảo, hãy đổi URL API thành:
-`http://10.0.2.2:8111`
-
-### Cách B: Sử dụng thiết bị thật
+### Cách A: Sử dụng IP máy tính (Khuyên dùng cho thiết bị thật)
 1. Đảm bảo điện thoại và máy tính cùng kết nối một mạng Wi-Fi.
 2. Tìm địa chỉ IP nội bộ của máy tính (VD: `192.168.1.15`).
-3. Đổi URL API thành: `http://192.168.1.15:8111`.
+3. Mở file `src/lib/api.ts` và sửa dòng `const androidIp = 'http://192.168.0.100:8111';` thành IP của bạn.
+4. Thực hiện lại **Quy trình xây dựng** ở mục 3.
 
-### Cách C: Port Forwarding (Dùng cáp USB)
-Nếu bạn kết nối thiết bị thật qua USB, bạn có thể dùng lệnh sau để chuyển tiếp port:
+### Cách B: Port Forwarding (Dùng cáp USB)
+Nếu bạn kết nối thiết bị thật qua USB và muốn dùng `localhost:8111`, hãy chạy lệnh sau trên máy tính:
 ```bash
 adb reverse tcp:8111 tcp:8111
 ```
-Sau khi chạy lệnh này, ứng dụng trên Android có thể gọi tới `http://localhost:8111` và nó sẽ tự động trỏ về backend trên máy tính của bạn.
+Sau khi chạy lệnh này, ứng dụng trên Android có thể gọi tới `http://localhost:8111` và nó sẽ tự động trỏ về backend trên máy tính của bạn. Trong trường hợp này, bạn cần sửa `src/lib/api.ts` để nó trả về `http://localhost:8111` ngay cả trên Android.
 
-## 5. Cách thay đổi URL API vĩnh viễn cho Android
-
-Bạn nên tạo file `.env.production` hoặc sửa trực tiếp trong `src/lib/api.ts`:
-
-```typescript
-// src/lib/api.ts
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://10.0.2.2:8111'; 
-```
+## 5. Kiểm tra lỗi (Debug)
+Nếu ứng dụng vẫn không kết nối được:
+1. Kiểm tra xem backend (port 8111) trên máy tính đã chạy chưa.
+2. Kiểm tra xem máy tính có chặn tường lửa (Firewall) không.
+3. Trong Android Studio, mở tab **Logcat** và lọc từ khóa `Capacitor` hoặc `BASE_URL` để xem ứng dụng đang thực sự gọi tới địa chỉ nào.
 
 ## 6. Chạy ứng dụng
 
