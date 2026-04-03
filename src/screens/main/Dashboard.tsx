@@ -483,10 +483,10 @@ export default function Dashboard() {
 
       {/* Bottom: Controls */}
       <div className="shrink-0 rounded-xl bg-white p-4 shadow-sm dark:bg-gray-800">
-        <div className="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-4 md:space-y-0">
+        <div className="flex flex-col md:flex-row md:items-end md:space-x-2 lg:space-x-4 space-y-4 md:space-y-0">
           {/* Mode Selection */}
-          <div className="md:w-48 shrink-0">
-            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Chế độ</label>
+          <div className="md:w-32 lg:w-48 shrink-0">
+            <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Chế độ</label>
             <select
               disabled={isBusy}
               value={mode}
@@ -501,7 +501,7 @@ export default function Dashboard() {
           {/* Language Selection */}
           <div className="flex flex-1 space-x-2">
             <div className="flex-1">
-              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
+              <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
               <select
                 disabled={isBusy}
                 value={inputLang}
@@ -515,7 +515,7 @@ export default function Dashboard() {
             </div>
             {mode === 'translate' && (
               <div className="flex-1">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
+                <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
                 <select
                   disabled={isBusy}
                   value={outputLang}
@@ -536,21 +536,21 @@ export default function Dashboard() {
               disabled={isBusy}
               onClick={isRecording ? stopRecording : startRecording}
               className={cn(
-                "flex flex-1 md:flex-none items-center justify-center rounded-lg px-4 py-2 font-medium text-white transition-colors",
+                "flex flex-1 md:flex-none items-center justify-center rounded-lg px-3 lg:px-4 py-2 font-medium text-white transition-colors",
                 isRecording ? "bg-red-500 hover:bg-red-600" : "bg-gray-600 hover:bg-gray-700",
                 isBusy && "opacity-50"
               )}
             >
-              {isRecording ? <Square className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
-              {isRecording ? 'Dừng thu' : 'Thu âm'}
+              {isRecording ? <Square className="md:mr-0 lg:mr-2 h-4 w-4" /> : <Mic className="md:mr-0 lg:mr-2 h-4 w-4" />}
+              <span className="md:hidden lg:inline">{isRecording ? 'Dừng thu' : 'Thu âm'}</span>
             </button>
             
             <label className={cn(
-              "flex flex-1 md:flex-none cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
+              "flex flex-1 md:flex-none cursor-pointer items-center justify-center rounded-lg bg-gray-200 px-3 lg:px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600",
               isBusy && "pointer-events-none opacity-50"
             )}>
-              <FileAudio className="mr-2 h-4 w-4" />
-              Chọn file
+              <FileAudio className="md:mr-0 lg:mr-2 h-4 w-4" />
+              <span className="md:hidden lg:inline">Chọn file</span>
               <input
                 type="file"
                 accept="audio/*,video/*"
@@ -562,25 +562,25 @@ export default function Dashboard() {
           </div>
 
           {/* Start/Stop Button */}
-          <div className="shrink-0 md:w-48">
+          <div className="shrink-0 md:w-auto lg:w-48">
             <button
               onClick={isBusy ? handleStop : handleStart}
               disabled={status === 'processing' || (!file && !!selectedJobId)}
               className={cn(
-                "flex w-full items-center justify-center rounded-lg px-4 py-2 font-bold text-white transition-colors",
+                "flex w-full items-center justify-center rounded-lg px-3 lg:px-4 py-2 font-bold text-white transition-colors",
                 isBusy ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700",
                 (status === 'processing' || (!file && !!selectedJobId)) && "opacity-50 cursor-not-allowed"
               )}
             >
               {isBusy ? (
                 <>
-                  <Square className="mr-2 h-5 w-5" />
-                  Dừng lại
+                  <Square className="md:mr-0 lg:mr-2 h-5 w-5" />
+                  <span className="md:hidden lg:inline">Dừng lại</span>
                 </>
               ) : (
                 <>
-                  <Play className="mr-2 h-5 w-5" />
-                  {(!file && !!selectedJobId) ? 'Hoàn thành' : 'Bắt đầu dịch'}
+                  <Play className="md:mr-0 lg:mr-2 h-5 w-5" />
+                  <span className="md:hidden lg:inline">{(!file && !!selectedJobId) ? 'Hoàn thành' : 'Bắt đầu dịch'}</span>
                 </>
               )}
             </button>
