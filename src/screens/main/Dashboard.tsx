@@ -241,14 +241,8 @@ export default function Dashboard() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.size > 100 * 1024 * 1024) {
-        toast.error('Kích thước file vượt quá 100MB');
-        return;
-      }
       setFile(selectedFile);
       setFileUrl(URL.createObjectURL(selectedFile));
-      setTranscribeContent('');
-      setTranslateContent('');
       setStatus('idle');
       setSelectedJobId(null);
     }
@@ -272,8 +266,6 @@ export default function Dashboard() {
         const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, { type: 'audio/webm' });
         setFile(audioFile);
         setFileUrl(URL.createObjectURL(audioFile));
-        setTranscribeContent('');
-        setTranslateContent('');
         setStatus('idle');
         setSelectedJobId(null);
       };
@@ -316,6 +308,10 @@ export default function Dashboard() {
       if (file) {
         const pcmBlob = await convertToPCM16(file);
         pcmFile = new File([pcmBlob], file.name.replace(/\.[^/.]+$/, "") + ".wav", { type: 'audio/wav' });
+
+        if (pcmFile.size > 100 * 1024 * 1024) {
+          throw new Error('Kích thước file âm thanh sau xử lý vượt quá 100MB');
+        }
       }
 
       const formData = new FormData();
