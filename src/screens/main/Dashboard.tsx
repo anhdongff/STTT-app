@@ -80,6 +80,13 @@ function PreviewBox({
   const subtitles = parseSrt(content);
   const activeIndex = subtitles.findIndex(sub => currentTime >= sub.start && currentTime <= sub.end);
   const lastScrolledIndex = useRef<number>(-1);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isBusy && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [content, isBusy]);
 
   useEffect(() => {
     if (activeIndex !== -1 && activeIndex !== lastScrolledIndex.current && expandedBox !== type) {
@@ -152,7 +159,7 @@ function PreviewBox({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
         {subtitles.length > 0 ? (
           <div className="whitespace-pre-wrap text-sm">
             {expandedBox === type ? (
@@ -243,14 +250,13 @@ export default function Dashboard() {
     if (selectedJobId) {
       fetchJobDetails(selectedJobId);
     } else {
-      setFile(null);
-      setFileUrl(null);
-      setTranscribeContent('');
-      setTranslateContent('');
-      setStatus('idle');
-      setMode('transcribe');
-      setInputLang('VIE');
-      setOutputLang('ENG');
+      // Do not clear transcribe/translate content as requested.
+      // We only clear the file if we are truly resetting (no manual file selected).
+      // When handleFileChange runs, it sets status='idle' first, so we use that as a guard.
+      if (status !== 'idle' && !file) {
+        setFile(null);
+        setFileUrl(null);
+      }
       setCurrentTime(0);
     }
   }, [selectedJobId]);
