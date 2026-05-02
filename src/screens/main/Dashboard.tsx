@@ -448,17 +448,27 @@ export default function Dashboard() {
   };
 
   const isBusy = status === 'processing' || status === 'running';
+  const isVideoFile = !!fileUrl && (file?.type?.startsWith('video/') || !!fileUrl.match(/\.(mp4|webm|mov)$/i));
 
   return (
     <div className="flex h-full flex-col p-4 md:p-6 space-y-4 overflow-y-auto md:overflow-hidden">
       {/* Top/Main Content Area */}
-      <div className="flex flex-1 flex-col md:flex-row md:space-x-6 min-h-0 space-y-4 md:space-y-0">
+      <div className={cn(
+        "flex flex-1 flex-col min-h-0 space-y-4",
+        (isVideoFile || !fileUrl) ? "md:flex-row md:space-x-6 md:space-y-0" : "flex-col"
+      )}>
         
         {/* Left/Top: Player */}
-        <div className="flex flex-col md:w-1/2 shrink-0 md:shrink">
-          <div className="aspect-video w-full overflow-hidden rounded-xl bg-black shadow-lg">
+        <div className={cn(
+          "flex flex-col shrink-0",
+          (isVideoFile || !fileUrl) ? "md:w-1/2 md:shrink" : "w-full"
+        )}>
+          <div className={cn(
+            "w-full overflow-hidden rounded-xl bg-black shadow-lg transition-all duration-300",
+            (isVideoFile || !fileUrl) ? "aspect-video" : "h-24 md:h-20"
+          )}>
             {fileUrl ? (
-              file?.type?.startsWith('video/') || fileUrl.match(/\.(mp4|webm|mov)$/i) ? (
+              isVideoFile ? (
                 <video
                   ref={playerRef as any}
                   src={fileUrl}
@@ -506,7 +516,10 @@ export default function Dashboard() {
         </div>
 
         {/* Right/Middle: Previews */}
-        <div className="flex flex-1 flex-col space-y-4 md:w-1/2 min-h-0 relative">
+        <div className={cn(
+          "flex flex-1 flex-col min-h-0 relative",
+          (isVideoFile || !fileUrl) ? "md:w-1/2 space-y-4" : "md:flex-row md:space-x-4 md:space-y-0"
+        )}>
           <PreviewBox
             title="Bản chép lời"
             content={transcribeContent}
