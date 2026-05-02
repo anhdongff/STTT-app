@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy } from 'lucide-react';
+import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy, X, FileText, AlignLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiCall, getWsUrl } from '../../lib/api';
 import { convertToPCM16 } from '../../lib/audioUtils';
@@ -53,6 +53,12 @@ function srtToVtt(srt: string): string {
   return vtt;
 }
 
+function srtToPlainText(srt: string): string {
+  if (!srt) return '';
+  const subtitles = parseSrt(srt);
+  return subtitles.map(sub => sub.text.trim()).join('\n\n');
+}
+
 function PreviewBox({
   title,
   content,
@@ -70,6 +76,7 @@ function PreviewBox({
   currentTime: number;
   isBusy: boolean;
 }) {
+  const [viewMode, setViewMode] = useState<'plain' | 'srt'>('plain');
   const subtitles = parseSrt(content);
   const activeIndex = subtitles.findIndex(sub => currentTime >= sub.start && currentTime <= sub.end);
   const lastScrolledIndex = useRef<number>(-1);
@@ -95,28 +102,68 @@ function PreviewBox({
         <h3 className="font-semibold text-gray-700 dark:text-gray-300">{title}</h3>
         <div className="flex space-x-2">
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(content);
-              toast.success('Đã sao chép');
-            }}
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
-          >
-            <Copy className="h-4 w-4" />
-          </button>
-          <button
             onClick={() => setExpandedBox(expandedBox === type ? null : type)}
             className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
           >
-            <Maximize2 className="h-4 w-4" />
+            {expandedBox === type ? <X className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </button>
         </div>
       </div>
+      
+      {expandedBox === type && (
+        <div className="flex items-center justify-between bg-gray-50 px-4 py-2 dark:bg-gray-700/50">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setViewMode('plain')}
+              className={cn(
+                "flex items-center rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                viewMode === 'plain' 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300"
+              )}
+            >
+              <AlignLeft className="mr-1 h-3 w-3" />
+              Văn bản
+            </button>
+            <button
+              onClick={() => setViewMode('srt')}
+              className={cn(
+                "flex items-center rounded-lg px-3 py-1 text-xs font-medium transition-colors",
+                viewMode === 'srt' 
+                  ? "bg-blue-600 text-white" 
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300"
+              )}
+            >
+              <FileText className="mr-1 h-3 w-3" />
+              Định dạng SRT
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              const textToCopy = viewMode === 'plain' ? srtToPlainText(content) : content;
+              navigator.clipboard.writeText(textToCopy);
+              toast.success('Đã sao chép');
+            }}
+            className="flex items-center rounded-lg bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300"
+          >
+            <Copy className="mr-1 h-3 w-3" />
+            Sao chép
+          </button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto p-4">
         {subtitles.length > 0 ? (
           <div className="whitespace-pre-wrap text-sm">
             {expandedBox === type ? (
-              // Expanded view: show raw SRT
-              <pre className="font-mono text-gray-800 dark:text-gray-200">{content}</pre>
+              // Expanded view: show content based on mode
+              viewMode === 'srt' ? (
+                <pre className="font-mono text-gray-800 dark:text-gray-200">{content}</pre>
+              ) : (
+                <div className="text-gray-800 dark:text-gray-200 leading-relaxed">
+                  {srtToPlainText(content)}
+                </div>
+              )
             ) : (
               // Normal view: show text only, highlight active
               subtitles.map((sub, i) => {
