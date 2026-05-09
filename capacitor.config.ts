@@ -7,13 +7,14 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'http',
     cleartext: true,
-    allowNavigation: ['192.168.0.100:8111']
+    allowNavigation: ['192.168.0.100']
   },
-  plugins: {
-    CapacitorHttp: {
-      enabled: true, // ĐÂY LÀ CHÌA KHÓA
-    },
-  },
+  loggingBehavior: 'none',
+  // plugins: {
+  //   CapacitorHttp: {
+  //     enabled: true,
+  //   },
+  // },
 };
 
 export default config;
