@@ -10,11 +10,11 @@ const config: CapacitorConfig = {
     allowNavigation: ['192.168.0.100']
   },
   loggingBehavior: 'none',
-  // plugins: {
-  //   CapacitorHttp: {
-  //     enabled: true,
-  //   },
-  // },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;

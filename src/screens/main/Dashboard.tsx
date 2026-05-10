@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy, X, FileText, AlignLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiCall, getWsUrl } from '../../lib/api';
-import { convertToPCM16 } from '../../lib/audioUtils';
+import { convertToAACNative, convertToRawNative } from '../../lib/audioUtils';
 import languageCodes from '../../lib/language-code.json';
 import { useAuthStore } from '../../store/authStore';
 import { useAppStore } from '../../store/appStore';
@@ -10,6 +10,8 @@ import { cn } from '../../lib/utils';
 
 type Mode = 'transcribe' | 'translate';
 type Status = 'idle' | 'processing' | 'running' | 'completed' | 'error';
+
+const MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024;
 
 interface Subtitle {
   id: string;
@@ -359,14 +361,58 @@ export default function Dashboard() {
     try {
       let pcmFile = file;
       if (file) {
-        const pcmBlob = await convertToPCM16(file);
-        pcmFile = new File([pcmBlob], file.name.replace(/\.[^/.]+$/, "") + ".wav", { type: 'audio/wav' });
+        const baseName = file.name.replace(/\.[^/.]+$/, "");
+        const isVideoInput = file.type.startsWith('video/');
 
-        if (pcmFile.size > 100 * 1024 * 1024) {
-          throw new Error('Kích thước file âm thanh sau xử lý vượt quá 100MB');
+        if (isVideoInput) {
+          const rawBlob = await convertToRawNative(file);
+          if (!rawBlob) {
+            throw new Error('Không thể tách âm thanh từ video. Vui lòng thử lại với file khác hoặc định dạng khác.');
+          }
+
+          let finalBlob = rawBlob;
+          let finalExt = 'mkv';
+          let finalType = rawBlob.type || 'audio/mkv';
+
+          if (finalBlob.size >= MAX_UPLOAD_SIZE_BYTES) {
+            toast.info('Đang xử lý tệp do tệp lớn, quá trình có thể xảy ra hơi lâu.');
+            const aacBlob = await convertToAACNative(finalBlob);
+            if (!aacBlob) {
+              throw new Error('Không thể xử lý tệp. Vui lòng thử lại với file khác hoặc định dạng khác.');
+            }
+
+            finalBlob = aacBlob;
+            finalExt = 'm4a';
+            finalType = aacBlob.type || 'audio/m4a';
+          }
+
+          if (finalBlob.size >= MAX_UPLOAD_SIZE_BYTES) {
+            throw new Error(
+              'Không thể xử lý tệp. Vui lòng thử lại với file khác hoặc định dạng khác.',
+            );
+          }
+
+          pcmFile = new File([finalBlob], `${baseName}.${finalExt}`, { type: finalType });
+        } else {
+          if (file.size >= MAX_UPLOAD_SIZE_BYTES) {
+            toast.info('Đang xử lý tệp do tệp lớn, quá trình có thể xảy ra hơi lâu.');
+            const aacBlob = await convertToAACNative(file);
+            if (!aacBlob) {
+              throw new Error('Không thể xử lý tệp. Vui lòng thử lại với file khác hoặc định dạng khác.');
+            }
+
+            if (aacBlob.size >= MAX_UPLOAD_SIZE_BYTES) {
+              throw new Error(
+                'Không thể xử lý tệp. Vui lòng thử lại với file khác hoặc định dạng khác.',
+              );
+            }
+
+            pcmFile = new File([aacBlob], `${baseName}.m4a`, { type: aacBlob.type || 'audio/m4a' });
+          }
         }
       }
 
+      // toast.success('PCM file ready for upload: ' + (pcmFile.size / (1024 * 1024)).toFixed(2) + ' MB');
       const formData = new FormData();
       if (pcmFile) {
         formData.append('file', pcmFile);
@@ -421,7 +467,7 @@ export default function Dashboard() {
           setStatus('completed');
         } else {
           setStatus('error');
-          toast.error('Có lỗi xảy ra trong quá trình xử lý');
+          toast.error('Có lỗi xảy ra trong quá trình xử lý: ' + event.reason);
         }
       };
 
