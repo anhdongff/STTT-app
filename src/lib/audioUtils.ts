@@ -1,7 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { AudioConverter } from '../plugin/ffmpegNative';
 import { writeCacheFileBlob, clearCacheFiles } from './cacheFileService';
-import { toast } from 'sonner';
 
 // Utility functions for audio processing
 
@@ -136,9 +135,7 @@ export async function convertToAACNative(file: Blob): Promise<Blob> {
   const inputUri = await writeCacheFileBlob(cacheFileName, file);
 
   const { outputPath } = await AudioConverter.convertToAAC({ inputPath: inputUri });
-  toast.info('Đường dẫn file đã được chuyển đổi: ' + outputPath);
   const fetchUrl = Capacitor.convertFileSrc(outputPath);
-  toast.info('Đường dẫn fetch file: ' + fetchUrl);
   const response = await fetch(fetchUrl);
 
   if (!response.ok) {
@@ -154,9 +151,7 @@ export async function convertToRawNative(file: Blob): Promise<Blob> {
   const inputUri = await writeCacheFileBlob(cacheFileName, file);
 
   const { outputPath } = await AudioConverter.convertToRaw({ inputPath: inputUri });
-  toast.info('Đường dẫn file đã được chuyển đổi: ' + outputPath);
   const fetchUrl = Capacitor.convertFileSrc(outputPath);
-  toast.info('Đường dẫn fetch file: ' + fetchUrl);
   const response = await fetch(fetchUrl);
 
   if (!response.ok) {

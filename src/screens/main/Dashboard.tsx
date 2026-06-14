@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy, X, FileText, AlignLeft } from 'lucide-react';
+import { Mic, FileAudio, Play, Square, Settings2, Maximize2, Copy, X, FileText, AlignLeft, ArrowLeftRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiCall, getWsUrl } from '../../lib/api';
 import { convertToAACNative, convertToRawNative } from '../../lib/audioUtils';
@@ -493,6 +493,12 @@ export default function Dashboard() {
     }
   };
 
+  const handleSwapLanguages = () => {
+    const temp = inputLang;
+    setInputLang(outputLang);
+    setOutputLang(temp);
+  };
+
   const isBusy = status === 'processing' || status === 'running';
   const isVideoFile = !!fileUrl && (file?.type?.startsWith('video/') || !!fileUrl.match(/\.(mp4|webm|mov)$/i));
 
@@ -607,7 +613,7 @@ export default function Dashboard() {
           </div>
 
           {/* Language Selection */}
-          <div className="flex flex-1 space-x-2">
+          <div className="flex flex-1 items-end space-x-1 md:space-x-2">
             <div className="flex-1">
               <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
               <select
@@ -621,20 +627,34 @@ export default function Dashboard() {
                 ))}
               </select>
             </div>
+
             {mode === 'translate' && (
-              <div className="flex-1">
-                <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
-                <select
-                  disabled={isBusy}
-                  value={outputLang}
-                  onChange={(e) => setOutputLang(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                >
-                  {Object.entries(languageCodes).map(([key, lang]) => (
-                    <option key={key} value={key}>{lang.name}</option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div className="flex shrink-0 items-center h-[42px]">
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={handleSwapLanguages}
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition-colors hover:bg-gray-200 hover:text-blue-600 disabled:opacity-50 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-blue-400"
+                    title="Hoán đổi ngôn ngữ"
+                  >
+                    <ArrowLeftRight className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
+                  <select
+                    disabled={isBusy}
+                    value={outputLang}
+                    onChange={(e) => setOutputLang(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  >
+                    {Object.entries(languageCodes).map(([key, lang]) => (
+                      <option key={key} value={key}>{lang.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
           </div>
 

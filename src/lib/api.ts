@@ -4,7 +4,7 @@ const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (!envUrl) {
     console.log("no base url found")
-    return 'http://192.168.0.100:8111'
+    return 'http://192.168.222.111:8111'
   } else return envUrl.replace(/\/$/, ''); // Remove trailing slash
 };
 
