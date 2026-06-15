@@ -4,7 +4,7 @@ const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (!envUrl) {
     console.log("no base url found")
-    return 'http://192.168.222.111:8111'
+    return 'https://sttt-api.id.vn'
   } else return envUrl.replace(/\/$/, ''); // Remove trailing slash
 };
 

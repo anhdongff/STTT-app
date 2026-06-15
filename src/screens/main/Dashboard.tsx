@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { apiCall, getWsUrl } from '../../lib/api';
 import { convertToAACNative, convertToRawNative } from '../../lib/audioUtils';
 import languageCodes from '../../lib/language-code.json';
+import { SearchableSelect } from '../../components/SearchableSelect';
 import { useAuthStore } from '../../store/authStore';
 import { useAppStore } from '../../store/appStore';
 import { cn } from '../../lib/utils';
@@ -499,6 +500,11 @@ export default function Dashboard() {
     setOutputLang(temp);
   };
 
+  const languageOptions = Object.entries(languageCodes).map(([key, lang]: [string, any]) => ({
+    id: key,
+    name: lang.name
+  }));
+
   const isBusy = status === 'processing' || status === 'running';
   const isVideoFile = !!fileUrl && (file?.type?.startsWith('video/') || !!fileUrl.match(/\.(mp4|webm|mov)$/i));
 
@@ -616,16 +622,12 @@ export default function Dashboard() {
           <div className="flex flex-1 items-end space-x-1 md:space-x-2">
             <div className="flex-1">
               <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ gốc</label>
-              <select
+              <SearchableSelect
                 disabled={isBusy}
+                options={languageOptions}
                 value={inputLang}
-                onChange={(e) => setInputLang(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-              >
-                {Object.entries(languageCodes).map(([key, lang]) => (
-                  <option key={key} value={key}>{lang.name}</option>
-                ))}
-              </select>
+                onChange={setInputLang}
+              />
             </div>
 
             {mode === 'translate' && (
@@ -643,16 +645,12 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <label className="mb-1 hidden lg:block text-sm font-medium text-gray-700 dark:text-gray-300">Ngôn ngữ dịch</label>
-                  <select
+                  <SearchableSelect
                     disabled={isBusy}
+                    options={languageOptions}
                     value={outputLang}
-                    onChange={(e) => setOutputLang(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  >
-                    {Object.entries(languageCodes).map(([key, lang]) => (
-                      <option key={key} value={key}>{lang.name}</option>
-                    ))}
-                  </select>
+                    onChange={setOutputLang}
+                  />
                 </div>
               </>
             )}
